@@ -1,0 +1,36 @@
+name: Deploy Backend
+on:
+  push:
+    branches: [ main ]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout the code
+        uses: actions/checkout@v3
+
+      - name: Docker login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: sundoladocker/aimockbackend:latest
+
+  deploying:
+    needs: deploy
+    runs-on: self-hosted
+    steps:
+      - name: pull image
+        run: docker pull sundoladocker/aimockbackend:latest
+      - name: delete old container
+        run: docker rm -f bun-aimockbackend-container
+      - name: run docker container
+        run: docker run -d -p 8080:8080 --name bun-aimockbackend-container -e PORT=8080 -e MONGODB_URL=${{ secrets.MONGODB_URL }} -e JWT_SECRET=${{ secrets.JWT_SECRET }} -e GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} sundoladocker/aimockbackend
