@@ -10,20 +10,16 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URL!)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Routes
 app.use('/api', authRoutes);
 app.use('/api/interview', interviewRoutes);
 
-// Protected route example
 app.get('/api/protected', authMiddleware, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
 });
